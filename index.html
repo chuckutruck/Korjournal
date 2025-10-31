@@ -2421,39 +2421,44 @@
       toggleUserDropdown();
     }
 
-    // Handle edit user
-    function handleEditUser(e) {
-      e.preventDefault();
-      showLoading(true);
-      updateSyncStatus('syncing');
-      
-      state.user.firstName = document.getElementById('edit-first-name').value;
-      state.user.lastName = document.getElementById('edit-last-name').value;
-      state.user.phone = document.getElementById('edit-phone').value;
-      
-      // Update Firebase user profile
-      auth.currentUser.updateProfile({
-        displayName: `${state.user.firstName} ${state.user.lastName}`
-      }).then(() => {
-        // Save additional user data to database
-        const userData = {
-          firstName: state.user.firstName,
-          lastName: state.user.lastName,
-          email: state.user.email,
-          phone: state.user.phone
-        };
-        
-        return database.ref(`users/${state.user.uid}`).set(userData);
-      }).then(() => {
-        updateUserInfo();
-        closeEditUserModal();
-        showLoading(false);
-        showAlert(translations[state.currentLanguage]['profile_updated'], 'success');
-      }).catch(error => {
-        showLoading(false);
-        showAlert(translations[state.currentLanguage]['update_error'] + error.message, 'error');
-      });
-    }
+	// Handle edit user - VERSIÓN CORREGIDA
+	function handleEditUser(e) {
+	  e.preventDefault();
+	  showLoading(true);
+	  updateSyncStatus('syncing');
+	  
+	  const firstName = document.getElementById('edit-first-name').value;
+	  const lastName = document.getElementById('edit-last-name').value;
+	  const phone = document.getElementById('edit-phone').value;
+	  
+	  // Update local state
+	  state.user.firstName = firstName;
+	  state.user.lastName = lastName;
+	  state.user.phone = phone;
+	  
+	  // Update Firebase user profile
+	  auth.currentUser.updateProfile({
+		displayName: `${firstName} ${lastName}`
+	  }).then(() => {
+		// ✅ CORRECCIÓN: Usar update() en lugar de set() para actualizar solo los campos específicos
+		const userUpdates = {
+		  firstName: firstName,
+		  lastName: lastName,
+		  phone: phone
+		  // ❌ NO incluir email aquí para no sobrescribir otros datos
+		};
+		
+		return database.ref(`users/${state.user.uid}`).update(userUpdates);
+	  }).then(() => {
+		updateUserInfo();
+		closeEditUserModal();
+		showLoading(false);
+		showAlert(translations[state.currentLanguage]['profile_updated'], 'success');
+	  }).catch(error => {
+		showLoading(false);
+		showAlert(translations[state.currentLanguage]['update_error'] + error.message, 'error');
+	  });
+	}
 
     // Handle company settings
     function handleCompanySettings(e) {
@@ -4375,5 +4380,6 @@
 	<!-- 🔼 FIN DEL CÓDIGO MEJORADO 🔼 -->
 </body>
 </html>
+
 
 
